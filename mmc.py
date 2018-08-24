@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from multiprocessing import Pool, freeze_support
 from os.path import basename
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import glob
 import img2pdf
 import os
@@ -38,7 +39,12 @@ def Initializing():
 def URLparser(URL):
     print("[*] Chrome Driver Starting...")
     print("-------------------------------------\n")
-    driver = webdriver.Chrome('./chromedriver')
+    
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--window-size=%s" % "1920,1080")
+    driver = webdriver.Chrome(executable_path='./chromedriver.exe',
+                              chrome_options=chrome_options)
     driver.set_window_size(600, 400)
     driver.implicitly_wait(1)
     driver.get(URL)
@@ -101,7 +107,7 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
             "_(" + "%04d" % count + ").jpg"
         count = count + 1
         params.append([curl, imgurl, imgfile])
-    
+
     pool = Pool(processes=4)
     pool.map(download, params)
 
@@ -166,21 +172,22 @@ def Removing(filelist):
 
 
 if __name__ == '__main__':
-	freeze_support()
-	mode = Initializing()
+    freeze_support()
+    
+    mode = Initializing()
 
-	if mode != 'a' and mode != 's':
-			print("[*] plz right command.")
-			sys.exit(1)
+    if mode != 'a' and mode != 's':
+        print("[*] plz right command.")
+        sys.exit(1)
 
-	URL = input("[*] Please input URL(only MARUMARU): ")
-	driver = URLparser(URL)
+    URL = input("[*] Please input URL(only MARUMARU): ")
+    driver = URLparser(URL)
 
-	if mode == 's':
-			SingleCollect(driver, 1, 1)
-	else:
-			MultiCollect(driver)
+    if mode == 's':
+        SingleCollect(driver, 1, 1)
+    else:
+        MultiCollect(driver)
 
-	print("[*] Closing Chrome..")
-	driver.close()
-	print("[*] Complete!")
+    print("[*] Closing Chrome..")
+    driver.close()
+    print("[*] Complete!")
