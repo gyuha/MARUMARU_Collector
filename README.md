@@ -17,7 +17,7 @@ Plz input URL(only MARUMARU URL)
 ```python
 > python setup.py build
 ```   
-   
+컴파일 후 buile/lib/multiprocessing/Pool.pyc 파일을 pool.pyc로 변경해 줘야 함.
 
 ## Not perfect
 
