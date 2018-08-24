@@ -4,16 +4,16 @@
 """	shino1025.blog.me    	"""
 """	github.com/iml1111   	"""
 
-from selenium import webdriver
 from bs4 import BeautifulSoup
+from multiprocessing import Pool, freeze_support
 from os.path import basename
-from multiprocessing import Pool
+from selenium import webdriver
 import glob
-import re
-import sys
-import os
 import img2pdf
+import os
+import re
 import requests
+import sys
 import zipfile
 
 dirname = os.path.dirname(os.path.realpath('__file__'))
@@ -23,7 +23,7 @@ Comics_Page = "http://wasabisyrup.com"
 
 def Initializing():
 
-    os.system('cls')
+    # os.system('cls')
     print("   |      |         |      |       ||||||")
     print("  | |    | |       ||     | |      |    |     ")
     print(" ||  |  |  ||     ||  |  |  ||     |              ")
@@ -74,7 +74,7 @@ def SingleCollect(driver, Comic_count, Comic_total):
 
 
 def Collecting(curl, bs0bj, Comic_count, Comic_total):
-    os.system('cls')
+    # os.system('cls')
     print("< Current Progress >")
     print("Total: " + str(Comic_count) + " / " + str(Comic_total))
 
@@ -90,7 +90,7 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
     comic_images = bs0bj.findAll("img")
     count = 1
 
-    os.system('cls')
+    # os.system('cls')
     print("< Current Progress >")
     print("# Total: " + str(Comic_count) + " / " + str(Comic_total))
     print("Browser: Chrome")
@@ -101,7 +101,7 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
             "_(" + "%04d" % count + ").jpg"
         count = count + 1
         params.append([curl, imgurl, imgfile])
-
+    
     pool = Pool(processes=4)
     pool.map(download, params)
 
@@ -113,7 +113,7 @@ def download(p):
     url = p[0]
     imgurl = p[1]
     file_name = p[2]
-    
+
     header = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5)\
 			AppleWebKit 537.36 (KHTML, like Gecko) Chrome",
@@ -141,6 +141,7 @@ def makePDF(comic_title):
 
     return os.listdir(dirname)
 
+
 def makeZIP(comic_title):
     print(comic_title)
     try:
@@ -165,21 +166,21 @@ def Removing(filelist):
 
 
 if __name__ == '__main__':
+	freeze_support()
+	mode = Initializing()
 
-    mode = Initializing()
+	if mode != 'a' and mode != 's':
+			print("[*] plz right command.")
+			sys.exit(1)
 
-    if mode != 'a' and mode != 's':
-        print("[*] plz right command.")
-        sys.exit(1)
+	URL = input("[*] Please input URL(only MARUMARU): ")
+	driver = URLparser(URL)
 
-    URL = input("[*] Please input URL(only MARUMARU): ")
-    driver = URLparser(URL)
+	if mode == 's':
+			SingleCollect(driver, 1, 1)
+	else:
+			MultiCollect(driver)
 
-    if mode == 's':
-        SingleCollect(driver, 1, 1)
-    else:
-        MultiCollect(driver)
-
-    print("[*] Closing Chrome..")
-    driver.close()
-    print("[*] Complete!")
+	print("[*] Closing Chrome..")
+	driver.close()
+	print("[*] Complete!")

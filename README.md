@@ -1,25 +1,25 @@
 # MARUMARU_Collector
 
-1. Download the comics registered on the Marumaru website.(marumaru.in)
-
-    Web crawler based action, images convert to pdf.
-
-    You can download cartoon shorts or download the whole series.
+## Description
+Download the comics registered on the Marumaru website.(marumaru.in)
+Web crawler based action, images convert to pdf.
+You can download cartoon shorts or download the whole series.
     
---------------------------------------------------------------------------------
+------
 
-2. How to use
-
-   $ python mmc.py
-
-   $ Select mode All or Single(a/s)(Short or Series)
-
-   $ Plz input URL(only MARUMARU URL)   
+## How to use
+```python
+> python mmc.py
+Select mode All or Single(a/s)(Short or Series)
+Plz input URL(only MARUMARU URL)   
+```
+## Make windows runtime binary
+```python
+> python setup.py build
+```   
    
----------------------------------------------------------------------------------
-   
 
-3. Not perfect
+## Not perfect
 
    Thank you.
  

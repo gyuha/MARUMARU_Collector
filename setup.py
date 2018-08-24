@@ -2,9 +2,22 @@ from cx_Freeze import setup, Executable
 import sys
 
 buildOptions = dict(packages = 
-	["idna","urllib","bs4","requests","re","sys","os","img2pdf","selenium"], 
+	[
+        "bs4",
+        "glob",
+        "idna",
+        "img2pdf",
+        "multiprocessing", 
+        "os",
+        "re",
+        "requests",
+        "selenium", 
+        "sys",
+        "urllib",
+        "zipfile" 
+    ], 
 	excludes = [])
-exe = [Executable("MMC.py")]
+exe = [Executable("mmc.py")]
 
 setup(
     name='MARUMARU_Collector',
