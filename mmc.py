@@ -98,7 +98,7 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
     os.system('cls' if os.name == 'nt' else 'clear')
     print("< Current Progress >")
     print("Total: " + str(Comic_count) + " / " + str(Comic_total))
-    print("[ ] Web image filename Crawling...", end='\r')
+    # print("[ ] Web image filename Crawling...", end='\r')
     protect = bs0bj.find("h2")
     if protect != None:
         return protect.get_text()
@@ -107,8 +107,9 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
     title_filter = '\\/<>:?!*"|'
     comic_title = comic_title.translate(
         {ord(x): y for (x, y) in zip(title_filter, "          ")})
-
-    comic_images = bs0bj.findAll("img")
+    print("[" + comic_title + "]")
+    gallery = bs0bj.find("div", {"id": "gallery_vertical"})
+    comic_images = gallery.findAll("img")
     count = 1
 
     params = []
@@ -133,7 +134,7 @@ def download(p):
     url = p[0]
     imgurl = p[1]
     file_name = p[2]
-
+    print("DOWNLOAD : " + imgurl + " => " + file_name)
     header = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5)\
 			AppleWebKit 537.36 (KHTML, like Gecko) Chrome",
