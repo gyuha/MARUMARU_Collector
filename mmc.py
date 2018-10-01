@@ -11,7 +11,6 @@ from os.path import basename
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import glob
-import img2pdf
 import os
 import re
 import requests
@@ -19,14 +18,13 @@ import sys
 import zipfile
 import platform
 
-dirname = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'temp')
-#dirname = os.path.dirname(os.path.realpath(sys.executable))
+temp_path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'temp')
+download_path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'download')
 Comics_Page = "http://wasabisyrup.com"
-
+Comics_title = ""   # 전체 이름
 
 def Initializing():
-
-    # os.system('cls')
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("   |      |         |      |       ||||||")
     print("  | |    | |       ||     | |      |    |     ")
     print(" ||  |  |  ||     ||  |  |  ||     |              ")
@@ -34,14 +32,18 @@ def Initializing():
     print(" ||   ||   ||     ||   ||   ||     ||||||   Ver. 0.2 by IML")
 
     print("\n$ HI! THIS IS MARUAMRU COLLECTOR! $\n")
+
+    if not os.path.exists(temp_path):
+        os.mkdir(temp_path)
+    if not os.path.exists(download_path):
+        os.mkdir(download_path)
+
     mode = input("[*] MODE is All or Single ?(a/s) ")
     return mode
 
 
 def URLparser(URL):
-    print("[*] Chrome Driver Starting...")
-    print("-------------------------------------\n")
-    
+    print("[ ] Chrome Driver Starting...", end="\r")
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--window-size=%s" % "1920,1080")
@@ -54,14 +56,21 @@ def URLparser(URL):
     driver.set_window_size(600, 400)
     driver.implicitly_wait(1)
     driver.get(URL)
+    print("[*] Chrome Driver Starting...")
     return driver
 
 
 def MultiCollect(driver):
     bs0bj = BeautifulSoup(driver.page_source, "html.parser")
+    #bbsview > div.viewbox > div.subject > h1
     Allcomics = bs0bj.findAll("a", {"href": re.compile("http://www.shencomics.com/archives/.*")})\
         + bs0bj.findAll("a", {"href": re.compile("http://www.yuncomics.com/archives/.*")})\
         + bs0bj.findAll("a", {"href": re.compile("http://wasabisyrup.com/archives/.*")})
+    global Comics_title        
+    Comics_title = bs0bj.find("h1").getText()
+    print("###################")
+    print("> " + Comics_title)
+    print("###################")
     Comic_count = 1
     Comic_total = len(Allcomics)
 
@@ -86,10 +95,10 @@ def SingleCollect(driver, Comic_count, Comic_total):
 
 
 def Collecting(curl, bs0bj, Comic_count, Comic_total):
-    # os.system('cls')
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("< Current Progress >")
     print("Total: " + str(Comic_count) + " / " + str(Comic_total))
-
+    print("[ ] Web image filename Crawling...", end='\r')
     protect = bs0bj.find("h2")
     if protect != None:
         return protect.get_text()
@@ -102,24 +111,20 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
     comic_images = bs0bj.findAll("img")
     count = 1
 
-    # os.system('cls')
-    print("< Current Progress >")
-    print("# Total: " + str(Comic_count) + " / " + str(Comic_total))
-    print("Browser: Chrome")
     params = []
 
     for img in comic_images:
         if not img.has_attr('data-src'):
             continue
         imgurl = Comics_Page + img.attrs['data-src']
-        imgfile = os.path.join(dirname, comic_title + \
+        imgfile = os.path.join(temp_path, comic_title + \
             "_(" + "%04d" % count + ").jpg")
         count = count + 1
         params.append([curl, imgurl, imgfile])
 
     pool = Pool(processes=4)
     pool.map(download, params)
-
+    print("[*] Web image filename Crawling...")
     return comic_title
 
 
@@ -143,24 +148,19 @@ def download(p):
         file.write(req.content)
 
 
-def makePDF(comic_title):
-    try:
-        with open(comic_title + ".pdf", "wb") as f:
-            f.write(img2pdf.convert(
-                [i for i in os.listdir(dirname) if i.endswith(".jpg")]))
-        print("[*] Combing to PDF file.")
-    except:
-        print("[*] PDF File Can't Make.")
-        print("[*] Program Down!")
-        sys.exit(1)
-
-    return os.listdir(dirname)
-
 
 def makeZIP(comic_title):
-    print(comic_title)
+    comic_title = re.sub(r'(\d+)화', lambda m : m.group(0).zfill(4), comic_title)
+    zip_filepath = os.path.join(download_path, comic_title + ".zip")
+    print("[ ] " + Comics_title + ".zip archive..", end="\r")
+    if Comics_title != "":
+        zip_filepath = os.path.join(download_path, Comics_title)
+        if not os.path.exists(zip_filepath):
+            os.mkdir(zip_filepath)
+        zip_filepath = os.path.join(zip_filepath, comic_title + ".zip")
+    
     try:
-        zipf = zipfile.ZipFile(comic_title + ".zip", 'w', zipfile.ZIP_DEFLATED)
+        zipf = zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED)
         for file in glob.glob(os.path.join("temp","*.jpg")):
             zipf.write(file, basename(file))
         zipf.close()
@@ -168,13 +168,14 @@ def makeZIP(comic_title):
         print("[*] ZIP File Can't Make.")
         print("[*] Program Down!")
         sys.exit(1)
-
-    return os.listdir(dirname)
+    print("[*] " + Comics_title + ".zip archive..")
+    return os.listdir(temp_path)
 
 
 def Removing(filelist):
+    print("[ ] Removing image files.", end = '\r')
     for file in filelist:
-        path = os.path.join(dirname, file)
+        path = os.path.join(temp_path, file)
         if path.endswith(".jpg"):
             os.remove(path)
     print("[*] Removing image files.")
