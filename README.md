@@ -4,7 +4,14 @@
 Download the comics registered on the Marumaru website.(marumaru.in)
 Web crawler based action, images convert to pdf.
 You can download cartoon shorts or download the whole series.
-    
+
+## Use    
+### Install files...
+```bash
+$ source env/bin/activate
+$ pip install -r requirements.txt
+```
+
 ------
 
 ## How to use

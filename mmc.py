@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """	MARUMARU COLLECTOR	"""
 """	     	  BY IML  	"""
 """	shin10256|gmail.com   	"""
