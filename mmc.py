@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """	MARUMARU COLLECTOR	"""
 """	     	  BY IML  	"""
 """	shin10256|gmail.com   	"""
@@ -18,8 +17,9 @@ import re
 import requests
 import sys
 import zipfile
+import platform
 
-dirname = os.path.dirname(os.path.realpath('__file__'))
+dirname = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'temp')
 #dirname = os.path.dirname(os.path.realpath(sys.executable))
 Comics_Page = "http://wasabisyrup.com"
 
@@ -45,7 +45,11 @@ def URLparser(URL):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--window-size=%s" % "1920,1080")
-    driver = webdriver.Chrome(executable_path='./chromedriver.exe',
+    dirver_file = './chromedriver.exe'
+    if platform.system() == 'Linux':
+        dirver_file = './chromedriver'
+
+    driver = webdriver.Chrome(executable_path=dirver_file,
                               chrome_options=chrome_options)
     driver.set_window_size(600, 400)
     driver.implicitly_wait(1)
@@ -103,10 +107,13 @@ def Collecting(curl, bs0bj, Comic_count, Comic_total):
     print("# Total: " + str(Comic_count) + " / " + str(Comic_total))
     print("Browser: Chrome")
     params = []
+
     for img in comic_images:
+        if not img.has_attr('data-src'):
+            continue
         imgurl = Comics_Page + img.attrs['data-src']
-        imgfile = dirname + "\\" + comic_title + \
-            "_(" + "%04d" % count + ").jpg"
+        imgfile = os.path.join(dirname, comic_title + \
+            "_(" + "%04d" % count + ").jpg")
         count = count + 1
         params.append([curl, imgurl, imgfile])
 
@@ -154,7 +161,7 @@ def makeZIP(comic_title):
     print(comic_title)
     try:
         zipf = zipfile.ZipFile(comic_title + ".zip", 'w', zipfile.ZIP_DEFLATED)
-        for file in glob.glob("*.jpg"):
+        for file in glob.glob(os.path.join("temp","*.jpg")):
             zipf.write(file, basename(file))
         zipf.close()
     except:

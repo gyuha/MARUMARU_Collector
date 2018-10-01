@@ -8,6 +8,7 @@ You can download cartoon shorts or download the whole series.
 ## Use    
 ### Install files...
 ```bash
+$ sudo apt-get install chromium-chromedriver
 $ source env/bin/activate
 $ pip install -r requirements.txt
 ```
