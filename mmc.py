@@ -75,10 +75,9 @@ def MultiCollect(driver):
     Comic_total = len(Allcomics)
 
     for url in Allcomics:
-        drv = URLparser(url.attrs['href'])
-        SingleCollect(drv, Comic_count, Comic_total)
+        driver.get(url.attrs['href'])
+        SingleCollect(driver, Comic_count, Comic_total)
         Comic_count += 1
-        drv.close()
 
 
 def SingleCollect(driver, Comic_count, Comic_total):
