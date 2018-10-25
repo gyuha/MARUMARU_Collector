@@ -17,6 +17,9 @@ import requests
 import sys
 import zipfile
 import platform
+import pathlib
+import shutil
+
 
 temp_path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'temp')
 download_path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'download')
@@ -33,13 +36,12 @@ def Initializing():
 
     print("\n$ HI! THIS IS MARUAMRU COLLECTOR! $\n")
 
-    if not os.path.exists(temp_path):
-        os.mkdir(temp_path)
-    if not os.path.exists(download_path):
-        os.mkdir(download_path)
+    if os.path.exists(temp_path):
+        shutil.rmtree(temp_path)
+    pathlib.Path(temp_path).mkdir(parents=True, exist_ok=True)
 
-    mode = input("[*] MODE is All or Single ?(a/s) ")
-    return mode
+    if not os.path.exists(download_path):
+        pathlib.Path(download_path).mkdir(parents=True, exist_ok=True)
 
 
 def URLparser(URL):
@@ -60,36 +62,63 @@ def URLparser(URL):
     return driver
 
 
+def writeCount(title, Comic_count):
+    path = os.path.join(download_path, title, 'count.dat')
+    f = open(path, "w")
+    f.write(str(Comic_count))
+    f.close()
+
+def readCount(title):
+    path = os.path.join(download_path, title)
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+    path = os.path.join(path, 'count.dat')
+    if not os.path.exists(path):
+        return 0
+    try:
+        f = open(path, "r")
+        count = f.readline()
+        return int(count)
+    except ValueError:
+        return 0
+    finally:
+        f.close()
+        
+
 def MultiCollect(driver):
     bs0bj = BeautifulSoup(driver.page_source, "html.parser")
     #bbsview > div.viewbox > div.subject > h1
     Allcomics = bs0bj.findAll("a", {"href": re.compile("http://www.shencomics.com/archives/.*")})\
         + bs0bj.findAll("a", {"href": re.compile("http://www.yuncomics.com/archives/.*")})\
+        + bs0bj.findAll("a", {"href": re.compile("http://blog.yuncomics.com/archives/.*")})\
         + bs0bj.findAll("a", {"href": re.compile("http://wasabisyrup.com/archives/.*")})
     global Comics_title        
-    Comics_title = bs0bj.find("h1").getText()
+    Comics_title = bs0bj.find("h1").getText().strip()
     print("###################")
     print("> " + Comics_title)
     print("###################")
     Comic_count = 1
     Comic_total = len(Allcomics)
 
+    download_count = readCount(Comics_title)
     for url in Allcomics:
+        if download_count >= Comic_count:
+            Comic_count += 1
+            continue
         driver.get(url.attrs['href'])
-        SingleCollect(driver, Comic_count, Comic_total)
+        SingleCollect(driver, Comics_title, Comic_count, Comic_total)
+        writeCount(Comics_title, Comic_count)
         Comic_count += 1
 
-
-def SingleCollect(driver, Comic_count, Comic_total):
+def SingleCollect(driver, Comics_title, Comic_count, Comic_total):
     print("[*] URL Parsing & Web Crawling...")
     bs0bj = BeautifulSoup(driver.page_source, "html.parser")
-    comic_title = Collecting(driver.current_url, bs0bj,
+    sub_title = Collecting(driver.current_url, bs0bj,
                              Comic_count, Comic_total)
 
-    if comic_title == "Protected":
+    if sub_title == "Protected":
         print("[*] This comic is Protected! Fail!")
     else:
-        filelist = makeZIP(comic_title)
+        filelist = makeZIP(Comic_count, Comics_title, sub_title)
         Removing(filelist)
 
 
@@ -149,15 +178,16 @@ def download(p):
 
 
 
-def makeZIP(comic_title):
-    comic_title = re.sub(r'(\d+)화', lambda m : m.group(0).zfill(4), comic_title)
-    zip_filepath = os.path.join(download_path, comic_title + ".zip")
+
+def makeZIP(Comic_count, title, sub_title):
+    sub_title = str(Comic_count).zfill(3) + "-" + sub_title
+    zip_filepath = os.path.join(download_path, title, sub_title + ".zip")
     print("[ ] " + Comics_title + ".zip archive..", end="\r")
     if Comics_title != "":
         zip_filepath = os.path.join(download_path, Comics_title)
         if not os.path.exists(zip_filepath):
             os.mkdir(zip_filepath)
-        zip_filepath = os.path.join(zip_filepath, comic_title + ".zip")
+        zip_filepath = os.path.join(zip_filepath, sub_title + ".zip")
     
     try:
         zipf = zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED)
@@ -183,20 +213,12 @@ def Removing(filelist):
 
 if __name__ == '__main__':
     freeze_support()
-    
-    mode = Initializing()
-
-    if mode != 'a' and mode != 's':
-        print("[*] plz right command.")
-        sys.exit(1)
+    Initializing()
 
     URL = input("[*] Please input URL(only MARUMARU): ")
     driver = URLparser(URL)
 
-    if mode == 's':
-        SingleCollect(driver, 1, 1)
-    else:
-        MultiCollect(driver)
+    MultiCollect(driver)
 
     print("[*] Closing Chrome..")
     driver.close()
